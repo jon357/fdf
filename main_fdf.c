@@ -9,13 +9,13 @@ struct s_struc
 	int		i;
 	int		j;
 	int		b;
-	int		d;
 	int		px;
 	int		py;
-	int		sx;
-	int		sy;
-	int		rx;
-	int		ry;
+	float	dp;
+	float	sx;
+	float	sy;
+	float	rx;
+	float	ry;
 	int		sizex;
 	int		sizey;
 	int		color;
@@ -51,10 +51,10 @@ struct s_wi
 
 struct s_pos
 {
-	int	sx;
-	int	sy;
-	int	ex;
-	int	ey;
+	float	sx;
+	float	sy;
+	float	ex;
+	float	ey;
 }	s;
 
 void	win_init(void)
@@ -103,17 +103,17 @@ void	pftw(float sx, float sy, float ex, float ey)
 {
 	z.unbi = atan2((ey - sy), (ex - sx));
 	z.i = 0;
-	z.d = dp(sx, sy, ex, ey);
+	z.dp = dp(sx, sy, ex, ey);
 	z.ecr = 0;
 	z.ecg = 0;
 	z.ecb = 0;
-	while (z.i < z.d)
+	while (z.i < z.dp)
 	{
 		z.ecr = lerp((z.scolor >> 16) & 0xff,
-				(z.ecolor >> 16) & 0xff, (float)z.i / z.d);
+				(z.ecolor >> 16) & 0xff, (float)z.i / z.dp);
 		z.ecg = lerp((z.scolor >> 8) & 0xff,
-				(z.ecolor >> 8) & 0xff, (float)z.i / z.d);
-		z.ecb = lerp(z.scolor & 0xff, z.ecolor & 0xff, (float)z.i / z.d);
+				(z.ecolor >> 8) & 0xff, (float)z.i / z.dp);
+		z.ecb = lerp(z.scolor & 0xff, z.ecolor & 0xff, (float)z.i / z.dp);
 		z.color = (z.ecr << 16) | (z.ecg << 8) | z.ecb;
 		z.pftwx = (sx + z.i * cos(z.unbi));
 		z.pftwy = (sy + z.i * sin(z.unbi));
@@ -210,15 +210,17 @@ int	lst_len(char **list)
 
 void	get_size(void)
 {
-	z.list = ft_split(get_next_line(w.fd), ' ');
+	z.str = get_next_line(w.fd);
+	z.list = ft_split(z.str, ' ');
 	z.i = 0;
 	while (z.list[z.i])
 	{
 		z.i++;
 	}
-	z.j = 1;
-	while (lst_len(ft_split(get_next_line(w.fd), ' ')) == lst_len(z.list))
+	z.j = 0;
+	while (z.str)
 	{
+		z.str = get_next_line(w.fd);
 		z.j++;
 	}
 	z.sizex = z.i;
@@ -254,10 +256,8 @@ void	split_map(void)
 	while (z.str)
 	{
 		z.list = ft_split(z.str, ' ');
-		if (lst_len(z.list) != z.sizex)
-			return ;
-		z.i = -1;
-		while (z.list[++z.i])
+		z.i = 0;
+		while (z.list[z.i] && z.i < z.sizex)
 		{
 			if (ft_strchr(z.list[z.i], ','))
 			{
@@ -269,6 +269,7 @@ void	split_map(void)
 				z.tb[z.i][z.j] = ft_atoi(z.list[z.i]);
 				z.hx[z.i][z.j] = "0xFFFFFF";
 			}
+			z.i++;
 		}
 		z.j++;
 		z.str = get_next_line(w.fd);
@@ -339,12 +340,12 @@ int	main(void)
 	//map = "test_maps/USGS_ULCN2005_grid.txt_OCEAN1_M.fdf";
 	//map = "test_maps/crash.fdf";
 	//map = "test_maps/10-2.fdf";
-	map = "test_maps/mars.fdf";
+	//map = "test_maps/mars.fdf";
 	//map = "test_maps/elem-col.fdf";
 	//map = "test_maps/42.fdf";
 	//map = "test_maps/50-4.fdf";
 	//map = "test_maps/100-6.fdf";
-	//map = "test_maps/t2.fdf";
+	map = "test_maps/t2.fdf";
 	//map = "test_maps/t1.fdf";
 	//map = "test_maps/julia.fdf";
 	//map = "test_maps/elem-fract.fdf";

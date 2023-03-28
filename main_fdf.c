@@ -16,6 +16,8 @@ struct s_struc
 	float	sy;
 	float	rx;
 	float	ry;
+	int		ex;
+	int		ey;
 	int		sizex;
 	int		sizey;
 	int		color;
@@ -61,12 +63,16 @@ void	win_init(void)
 {
 	w.mt = 1;
 	w.rt = 45;
-	w.sizex = 1920 * 0.75;
-	w.sizey = 1080 * 0.75;
+	w.sizex = 3840 * 0.75;
+	w.sizey = 2160 * 0.75;
 	w.mx = w.sizex * 0.5;
 	w.my = w.sizey * 0.5;
-	w.mrgx = w.sizex * 0.10;
-	w.mrgy = w.sizey * 0.10;
+	w.mrgx = w.sizex * 0.2;
+	w.mrgy = w.sizey * 0.2;
+	z.rx = 2 * w.mrgx;
+	z.ry = 2 * w.mrgy;
+	z.sx = (w.sizex - z.rx) / (z.sizex - 1);
+	z.sy = (w.sizey - z.ry) / (z.sizey - 1);
 	w.mlx = mlx_init();
 	w.win = mlx_new_window(w.mlx, w.sizex, w.sizey, "mlx 42");
 }
@@ -88,6 +94,8 @@ int	hextoint(char *str)
 	while (str[++z.i])
 	{
 		z.b = str[z.i];
+		if (z.b == '\n')
+			return (z.temp);
 		if (z.b >= '0' && z.b <= '9')
 			z.b = z.b - '0';
 		else if (z.b >= 'a' && z.b <= 'f')
@@ -124,10 +132,11 @@ void	pftw(float sx, float sy, float ex, float ey)
 
 void	deplacer_point(float psx, float psy, float pex, float pey)
 {
-	float	a = w.rt * M_PI / 180.0;
+	float	a;
 	float	dx;
 	float	dy;
 
+	a = w.rt * M_PI / 180.0;
 	dx = psx - w.mx;
 	dy = psy - w.my;
 	s.sx = w.mx + dx * cos(a) - dy * sin(a);
@@ -164,21 +173,47 @@ void	draw_tab(void)
 	}
 }
 
-void	res(void)
+void	draw_orient(int s1, int s2, int ystep, int xstep)
 {
-	z.rx = 2 * w.mrgx;
-	z.ry = 2 * w.mrgy;
-	z.sx = (w.sizex - z.rx) / (z.sizex - 1);
-	z.sy = (w.sizey - z.ry) / (z.sizey - 1);
-	z.py = -1;
-	while (++z.py < z.sizey)
+	z.px = s1;
+	while (z.px != z.ex)
 	{
-		z.px = -1;
-		while (++z.px < z.sizex)
+		z.py = s2;
+		while (z.py != z.ey)
 		{
 			z.scolor = hextoint(z.hx[z.px][z.py]);
 			draw_tab();
+			z.py += ystep;
 		}
+		z.px += xstep;
+	}
+}
+
+void	res(void)
+{
+	if (w.rt >= 0 && w.rt < 90)
+	{
+		z.ex = z.sizex;
+		z.ey = z.sizey;
+		draw_orient(0, 0, 1, 1);
+	}
+	if (w.rt >= 90 && w.rt < 180)
+	{
+		z.ex = z.sizex;
+		z.ey = -1;
+		draw_orient(0, z.sizey - 1, -1, 1);
+	}
+	if (w.rt >= 180 && w.rt < 270)
+	{
+		z.ex = -1;
+		z.ey = -1;
+		draw_orient(z.sizex - 1 ,z.sizey - 1 , -1, -1);
+	}
+	if (w.rt >= 270 && w.rt < 360)
+	{
+		z.ex = -1;
+		z.ey = z.sizey;
+		draw_orient(z.sizex - 1, 0, 1, -1);
 	}
 }
 
@@ -243,7 +278,7 @@ void	tab_init(void)
 		z.j = 0;
 		while (z.j < z.sizey)
 		{
-			z.hx[z.i][z.j++] = (char *)malloc(50 * sizeof(char));
+			z.hx[z.i][z.j++] = (char *)malloc(10 * sizeof(char));
 		}
 		z.i++;
 	}
@@ -302,6 +337,8 @@ int	deal_key(int key)
 	{
 		v_reset();
 		w.rt = w.rt - 15;
+		if (w.rt < 0)
+			w.rt = 345;
 		res();
 	}
 	if (key == 65362)
@@ -314,6 +351,8 @@ int	deal_key(int key)
 	{
 		v_reset();
 		w.rt = w.rt + 15;
+		if (w.rt >= 360)
+			w.rt = 0;
 		res();
 	}
 	if (key == 65364)
@@ -336,9 +375,9 @@ int	main(void)
 
 	//map = "test_maps/MGDS_AMAZONIA_OCEAN1_S.fdf";
 	//map = "test_maps/MGDS_WHOLE_WORLD_OCEAN1_S.fdf";
+	//map = "test_maps/MGDS_HIMALAYA_OCEAN1_M.fdf";
 	//map = "test_maps/USGS_ULCN2005_grid.txt_OCEAN1_S.fdf";
 	//map = "test_maps/USGS_ULCN2005_grid.txt_OCEAN1_M.fdf";
-	//map = "test_maps/crash.fdf";
 	//map = "test_maps/10-2.fdf";
 	//map = "test_maps/mars.fdf";
 	//map = "test_maps/elem-col.fdf";

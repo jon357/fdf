@@ -12,10 +12,6 @@ struct s_struc
 	int		px;
 	int		py;
 	float	dp;
-	float	sx;
-	float	sy;
-	float	rx;
-	float	ry;
 	int		ex;
 	int		ey;
 	int		sizex;
@@ -43,12 +39,17 @@ struct s_wi
 	void	*win;
 	float	mt;
 	float	rt;
+	float	zm;
+	float	sx;
+	float	sy;
 	int		sizex;
 	int		sizey;
 	int		mrgx;
 	int		mrgy;
 	int		mx;
 	int		my;
+	int		posx;
+	int		posy;
 }	w;
 
 struct s_pos
@@ -62,17 +63,18 @@ struct s_pos
 void	win_init(void)
 {
 	w.mt = 1;
+	w.zm = 0.2;
 	w.rt = 45;
+	w.posx = 0;
+	w.posy = 0;
 	w.sizex = 3840 * 0.75;
 	w.sizey = 2160 * 0.75;
 	w.mx = w.sizex * 0.5;
 	w.my = w.sizey * 0.5;
-	w.mrgx = w.sizex * 0.2;
-	w.mrgy = w.sizey * 0.2;
-	z.rx = 2 * w.mrgx;
-	z.ry = 2 * w.mrgy;
-	z.sx = (w.sizex - z.rx) / (z.sizex - 1);
-	z.sy = (w.sizey - z.ry) / (z.sizey - 1);
+	w.mrgx = w.sizex * w.zm;
+	w.mrgy = w.sizey * w.zm;
+	w.sx = (w.sizex - (2 * w.mrgx)) / (z.sizex - 1);
+	w.sy = (w.sizey - (2 * w.mrgy)) / (z.sizey - 1);
 	w.mlx = mlx_init();
 	w.win = mlx_new_window(w.mlx, w.sizex, w.sizey, "mlx 42");
 }
@@ -85,26 +87,6 @@ float	dp(float sx, float sy, float ex, float ey)
 int	lerp(int a, int b, float t)
 {
 	return ((int)((1 - t) * a + t * b));
-}
-
-int	hextoint(char *str)
-{
-	z.i = 1;
-	z.temp = 0;
-	while (str[++z.i])
-	{
-		z.b = str[z.i];
-		if (z.b == '\n')
-			return (z.temp);
-		if (z.b >= '0' && z.b <= '9')
-			z.b = z.b - '0';
-		else if (z.b >= 'a' && z.b <= 'f')
-			z.b = z.b - 'a' + 10;
-		else if (z.b >= 'A' && z.b <= 'F')
-			z.b = z.b - 'A' + 10;
-		z.temp = (z.temp << 4) | (z.b & 0xF);
-	}
-	return (z.temp);
 }
 
 void	pftw(float sx, float sy, float ex, float ey)
@@ -147,29 +129,49 @@ void	deplacer_point(float psx, float psy, float pex, float pey)
 	s.ey = w.my + dx * sin(a) + dy * cos(a);
 }
 
+int	hextoint(char *str)
+{
+	z.i = 1;
+	z.temp = 0;
+	while (str[++z.i])
+	{
+		z.b = str[z.i];
+		if (z.b == '\n')
+			return (z.temp);
+		if (z.b >= '0' && z.b <= '9')
+			z.b = z.b - '0';
+		else if (z.b >= 'a' && z.b <= 'f')
+			z.b = z.b - 'a' + 10;
+		else if (z.b >= 'A' && z.b <= 'F')
+			z.b = z.b - 'A' + 10;
+		z.temp = (z.temp << 4) | (z.b & 0xF);
+	}
+	return (z.temp);
+}
+
 void	draw_tab(void)
 {
 	if (z.px + 1 < z.sizex)
 	{
 		z.ecolor = hextoint(z.hx[z.px + 1][z.py]);
-		s.sx = w.mrgx + z.px * z.sx;
-		s.sy = w.mrgy + z.py * z.sy ;
-		s.ex = w.mrgx + (z.px + 1) * z.sx;
-		s.ey = w.mrgy + z.py * z.sy;
+		s.sx = w.mrgx + z.px * w.sx;
+		s.sy = w.mrgy + z.py * w.sy;
+		s.ex = w.mrgx + (z.px + 1) * w.sx;
+		s.ey = w.mrgy + z.py * w.sy;
 		deplacer_point(s.sx, s.sy, s.ex, s.ey);
-		pftw(s.sx, s.sy - (z.tb[z.px][z.py] * w.mt),
-			s.ex, s.ey - (z.tb[z.px + 1][z.py] * w.mt));
+		pftw(s.sx + w.posx, s.sy - (z.tb[z.px][z.py] * w.mt) + w.posy,
+			s.ex + w.posx, s.ey - (z.tb[z.px + 1][z.py] * w.mt) + w.posy);
 	}
 	if (z.py + 1 < z.sizey)
 	{
 		z.ecolor = hextoint(z.hx[z.px][z.py + 1]);
-		s.sx = w.mrgx + z.px * z.sx;
-		s.sy = w.mrgy + z.py * z.sy;
-		s.ex = w.mrgx + z.px * z.sx;
-		s.ey = w.mrgy + (z.py + 1) * z.sy;
+		s.sx = w.mrgx + z.px * w.sx;
+		s.sy = w.mrgy + z.py * w.sy;
+		s.ex = w.mrgx + z.px * w.sx;
+		s.ey = w.mrgy + (z.py + 1) * w.sy;
 		deplacer_point(s.sx, s.sy, s.ex, s.ey);
-		pftw(s.sx, s.sy - (z.tb[z.px][z.py] * w.mt),
-			s.ex, s.ey - (z.tb[z.px][z.py + 1] * w.mt));
+		pftw(s.sx + w.posx, s.sy - (z.tb[z.px][z.py] * w.mt) + w.posy,
+			s.ex + w.posx, s.ey - (z.tb[z.px][z.py + 1] * w.mt) + w.posy);
 	}
 }
 
@@ -207,7 +209,7 @@ void	res(void)
 	{
 		z.ex = -1;
 		z.ey = -1;
-		draw_orient(z.sizex - 1 ,z.sizey - 1 , -1, -1);
+		draw_orient(z.sizex - 1, z.sizey - 1, -1, -1);
 	}
 	if (w.rt >= 270 && w.rt < 360)
 	{
@@ -215,32 +217,6 @@ void	res(void)
 		z.ey = z.sizey;
 		draw_orient(z.sizex - 1, 0, 1, -1);
 	}
-}
-
-void	debug_struc_matri(void)
-{
-	z.j = 0;
-	while (z.j < z.sizey)
-	{
-		z.i = 0;
-		while (z.i < z.sizex)
-		{
-			ft_printf("|-%d-%d-|", z.i, z.j);
-			ft_printf("%d", z.tb[z.i][z.j]);
-			ft_printf("%s", z.hx[z.i][z.j]);
-			z.i++;
-		}
-		z.j++;
-		ft_printf("\n");
-	}
-}
-
-int	lst_len(char **list)
-{
-	z.i = 0;
-	while (list[z.i])
-		z.i++;
-	return (z.i);
 }
 
 void	get_size(void)
@@ -325,80 +301,88 @@ void	v_reset(void)
 	}
 }
 
-int	deal_key(int key)
+int	mouse_hook(int key)
 {
-	if (key == 65307)
+	if (key == 4)
 	{
-		mlx_destroy_window(w.mlx, w.win);
-		exit (0);
-		return (0);
-	}
-	if (key == 65361)
-	{
+		w.zm += 0.1;
+		w.mrgx = w.sizex * w.zm;
+		w.mrgy = w.sizey * w.zm;
+		w.sx = (w.sizex - (2 * w.mrgx)) / (z.sizex - 1);
+		w.sy = (w.sizey - (2 * w.mrgy)) / (z.sizey - 1);
 		v_reset();
-		w.rt = w.rt - 15;
-		if (w.rt < 0)
-			w.rt = 345;
 		res();
 	}
-	if (key == 65362)
+	if (key == 5)
 	{
+		w.zm -= 0.1;
+		w.mrgx = w.sizex * w.zm;
+		w.mrgy = w.sizey * w.zm;
+		w.sx = (w.sizex - (2 * w.mrgx)) / (z.sizex - 1);
+		w.sy = (w.sizey - (2 * w.mrgy)) / (z.sizey - 1);
 		v_reset();
-		w.mt = w.mt + 0.2;
 		res();
 	}
-	if (key == 65363)
-	{
-		v_reset();
-		w.rt = w.rt + 15;
-		if (w.rt >= 360)
-			w.rt = 0;
-		res();
-	}
-	if (key == 65364)
-	{
-		v_reset();
-		w.mt = w.mt - 0.2;
-		res();
-	}
-	if (key == 111)
-	{
-		ft_printf("%d %d\n", w.mx, w.my);
-	}
-	//ft_printf("%d", key);
 	return (key);
 }
 
-int	main(void)
+void	kill_prog(void)
 {
-	char	*map;
+	mlx_destroy_window(w.mlx, w.win);
+	exit (0);
+}
 
-	//map = "test_maps/MGDS_AMAZONIA_OCEAN1_S.fdf";
-	//map = "test_maps/MGDS_WHOLE_WORLD_OCEAN1_S.fdf";
-	//map = "test_maps/MGDS_HIMALAYA_OCEAN1_M.fdf";
-	//map = "test_maps/USGS_ULCN2005_grid.txt_OCEAN1_S.fdf";
-	//map = "test_maps/USGS_ULCN2005_grid.txt_OCEAN1_M.fdf";
-	//map = "test_maps/10-2.fdf";
-	//map = "test_maps/mars.fdf";
-	//map = "test_maps/elem-col.fdf";
-	//map = "test_maps/42.fdf";
-	//map = "test_maps/50-4.fdf";
-	//map = "test_maps/100-6.fdf";
-	map = "test_maps/t2.fdf";
-	//map = "test_maps/t1.fdf";
-	//map = "test_maps/julia.fdf";
-	//map = "test_maps/elem-fract.fdf";
-	w.fd = open(map, O_RDONLY);
+void	rot_scr(int rot)
+{
+	w.rt = w.rt + rot;
+	if (w.rt < 0)
+		w.rt = 345;
+	if (w.rt >= 360)
+		w.rt = 0;
+}
+
+int	deal_key(int key)
+{
+	if (key == 65307)
+		kill_prog();
+	else if (key == 65361)
+		rot_scr(-15);
+	else if (key == 65363)
+		rot_scr(15);
+	else if (key == 65362)
+		w.mt = w.mt + 0.2;
+	else if (key == 65364)
+		w.mt = w.mt - 0.2;
+	else if (key == 119)
+		w.posy += 100 * (w.zm + 1 * 10);
+	else if (key == 100)
+		w.posx -= 100 * (w.zm + 1 * 10);
+	else if (key == 115)
+		w.posy -= 100 * (w.zm + 1 * 10);
+	else if (key == 97)
+		w.posx += 100 * (w.zm + 1 * 10);
+	else
+		return (key);
+	v_reset();
+	res();
+	return (key);
+}
+
+int	main(int argc, char **argv)
+{
+	ft_printf("%d %s\n", argc, argv[1]);
+	if (argc != 2)
+		return (0);
+	w.fd = open(argv[1], O_RDONLY);
 	get_size();
 	tab_init();
 	close(w.fd);
-	w.fd = open(map, O_RDONLY);
+	w.fd = open(argv[1], O_RDONLY);
 	split_map();
-	//debug_struc_matri();
 	win_init();
 	res();
 	mlx_key_hook(w.win, deal_key, (void *)0);
-	//mlx_mouse_hook(w.win, mouse_houk, (void *)0);
+	mlx_mouse_hook(w.win, mouse_hook, (void *)0);
 	mlx_loop(w.mlx);
 	return (0);
 }

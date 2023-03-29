@@ -341,6 +341,33 @@ void	rot_scr(int rot)
 		w.rt = 0;
 }
 
+void	sub_key(int key)
+{
+	int	scl;
+
+	scl = 500;
+	if (key == 119)
+	{
+		w.my -= scl;
+		w.posy += scl;
+	}
+	else if (key == 100)
+	{
+		w.mx += scl;
+		w.posx -= scl;
+	}
+	else if (key == 115)
+	{
+		w.my += scl;
+		w.posy -= scl;
+	}
+	else if (key == 97)
+	{
+		w.mx -= scl;
+		w.posx += scl;
+	}
+}
+
 int	deal_key(int key)
 {
 	if (key == 65307)
@@ -353,14 +380,8 @@ int	deal_key(int key)
 		w.mt = w.mt + 0.2;
 	else if (key == 65364)
 		w.mt = w.mt - 0.2;
-	else if (key == 119)
-		w.posy += 100 * (w.zm + 1 * 10);
-	else if (key == 100)
-		w.posx -= 100 * (w.zm + 1 * 10);
-	else if (key == 115)
-		w.posy -= 100 * (w.zm + 1 * 10);
-	else if (key == 97)
-		w.posx += 100 * (w.zm + 1 * 10);
+	else if (key == 119 || key == 100 || key == 115 || key == 97)
+		sub_key(key);
 	else
 		return (key);
 	v_reset();
@@ -370,7 +391,6 @@ int	deal_key(int key)
 
 int	main(int argc, char **argv)
 {
-	ft_printf("%d %s\n", argc, argv[1]);
 	if (argc != 2)
 		return (0);
 	w.fd = open(argv[1], O_RDONLY);
